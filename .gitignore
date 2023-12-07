@@ -77,3 +77,6 @@ DerivedDataCache/*
 *.fda
 *.rat
 *.con
+
+# Texture files for DOW
+*.dds
