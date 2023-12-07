@@ -1,0 +1,315 @@
+<html>
+<head>
+  <title>
+    FDA & AIFC Specs [ENG]
+  </title>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+</head>
+<body bgcolor="#FFFFFF">
+  <font face="Arial" size=3>
+  <div align="justify">
+
+  <div align="right">
+    Date: November 14, 2005<br>
+    Author: jTommy (jTommy@zmail.ru)<br><br>
+  </div>
+
+  <font size=5><div align="center"><strong>
+    FDA file format specification<br>
+    (Fourier/Fast Digital Audio)
+  </strong></div></font>
+
+  <br>A C-like language will be used to describe data structures in this document.
+  The data types used are listed below:
+  <table width="500" border="1">
+    <tr>
+      <td>CHAR</td>
+      <td>8-bit signed integer, 1-byte symbol</td>
+    </tr>
+    <tr>
+      <td>BYTE</td>
+      <td>8-bit unsigned integer</td>
+    </tr>
+    <tr>
+      <td>INT</td>
+      <td>16-bit signed integer</td>
+    </tr>
+    <tr>
+      <td>UINT</td>
+      <td>16-bit unsigned integer</td>
+    </tr>
+    <tr>
+      <td>LONG</td>
+      <td>32-bit signed integer</td>
+    </tr>
+    <tr>
+      <td>ULONG</td>
+      <td>32-bit unsigned integer</td>
+    </tr>
+    <tr>
+      <td>PSTRING</td>
+      <td>Pascal-string</td>
+    </tr>
+  </table>
+
+  <div align="center"><font size=4><strong><br>
+    General info<br>
+  </strong></font></div>
+  Bytes order in 16- and 32-bit numbers is little-endian which is normal for
+  x86 systems.<br>
+  Data in file is organized in chunks. Chunk - independent data structure,
+  containing header and data block (not necessarily). Chunks don't have
+  fixed positions in a file and are read consistently. In a data block chunk
+  can contain data structure, data stream or other chunks.
+
+  <div align="center"><font size=4><strong><br>
+    File structure<br>
+  </strong></font></div>
+  <table width="300" border="1">
+    <tr>
+      <td width="33%">FDAHeader</td>
+      <td width="67%">File header</td>
+    </tr>
+    <tr>
+      <td>FBIF</td>
+      <td>File Burn Info chunk</td>
+    </tr>
+    <tr>
+      <td>FDA_</td>
+      <td>Container-chunk FDA</td>
+    </tr>
+    <tr>
+      <td><div align="center">INFO</div></td>
+      <td>INFO chunk</td>
+    </tr>
+    <tr>
+      <td><div align="center">DATA</div></td>
+      <td>DATA chunk</td>
+    </tr>
+  </table>
+
+  <div align="center"><font size=4><strong><br>
+    File header<br>
+  </strong></font></div>
+  File header contains identifier and file version.<br>
+  <code><br>
+    typedef struct TFDAHeader {<br>
+    &nbsp;&nbsp;CHAR Signature[12]; // File identifier (always "Relic Chunky")<br>
+    &nbsp;&nbsp;CHAR SignServ[4]; &nbsp; // (always 0x0d0a1a00)<br>
+    &nbsp;&nbsp;ULONG MajorVer; &nbsp;&nbsp;&nbsp; // Probably major version number (always 0x01)<br>
+    &nbsp;&nbsp;ULONG MinorVer; &nbsp;&nbsp;&nbsp; // Probably minor version number (always 0x01)<br>
+    } FDAHeader;<br><br>
+  </code>
+  SignServ stops file output to display in command promt ("type" command).
+
+  <div align="center"><font size=4><strong><br>
+    Data chunks<br>
+  </strong></font></div>
+  FDA file always contains following chunks: FBIF, FDA_, INFO, DATA. Chunk order
+  never changes. But in future new chunks may be added. Every chunk starts with
+  header:
+  <code><br><br>
+    typedef struct TChunkHeader {<br>
+    &nbsp;&nbsp;CHAR ChunkType[4]; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Chunk type<br>
+    &nbsp;&nbsp;CHAR ChunkID[4]; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Chunk identifier<br>
+    &nbsp;&nbsp;ULONG ChunkVer; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Chunk version<br>
+    &nbsp;&nbsp;ULONG ChunkSize; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Data size in chunk (in bytes)<br>
+    &nbsp;&nbsp;ULONG lenChunkName; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // ChunkName string length<br>
+    &nbsp;&nbsp;CHAR ChunkName[lenChunkName]; // Chunk name<br>
+    } ChunkHeader;<br><br>
+  </code>
+  ChunkType sets chunk type: "DATA" - chunk contains data (structure and/or data
+  stream); "FOLD" - container-chunk, contains subchunks. In this case in the
+  ChunkSize the size of all chunks is writen.
+
+  <strong><br><br>
+    FBIF chunk (File Burn Info)
+  </strong><br>
+  This chunk contains info about FDA file creation. In all "Relic Chunky" files
+  this chunk always follows the header.<br>
+  <code><br>
+    typedef struct TFBIFChunk {<br>
+    &nbsp;&nbsp;ULONG lenPluginName; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // PluginName string length (always 0x0a)<br>
+    &nbsp;&nbsp;CHAR PluginName[lenPluginName]; // Plugin name (always "RAW to FDA")<br>
+    &nbsp;&nbsp;ULONG PluginVer; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Plugin version (always 0x01)<br>
+    &nbsp;&nbsp;ULONG lenUserName; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // UserName string length<br>
+    &nbsp;&nbsp;CHAR UserName[lenUserName]; &nbsp;&nbsp;&nbsp; // OS username<br>
+    &nbsp;&nbsp;ULONG lenBurnTime; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // BurnTime string length<br>
+    &nbsp;&nbsp;CHAR BurnTime[lenBurnTime]; &nbsp;&nbsp;&nbsp; // Files creation date and time<br>
+    } FBIFChunk;<br><br>
+  </code>
+  PluginName defines plugin name, which was used for file creation (or can work
+  with data in that file).<br>
+  BurnTime contains date and time in the following format: "[Month] [dd], [yyyy],
+  [h]:[mm]:[ss] [AM/PM]". For example: "August 08, 2004, 5:36:59 PM".<br>
+  Chunk header always contains following values:<br>
+  <code>
+    &nbsp;&nbsp;ChunkType &nbsp;&nbsp; = "DATA"<br>
+    &nbsp;&nbsp;ChunkID &nbsp;&nbsp;&nbsp;&nbsp; = "FBIF"<br>
+    &nbsp;&nbsp;ChunkVer &nbsp;&nbsp;&nbsp; = 0x01<br>
+    &nbsp;&nbsp;lenChunkName = 0x0d<br>
+    &nbsp;&nbsp;ChunkName &nbsp;&nbsp; = "FileBurnInfo"\0
+  </code>
+
+  <strong><br><br>
+    FDA_ chunk
+  </strong><br>
+  This is container-chunk. It contains two subchunks: INFO and DATA.<br>
+  <code><br>
+    typedef struct TFDA_Chunk {<br>
+    } FDA_Chunk;<br><br>
+  </code>
+  Chunk header always contains following values:<br>
+  <code>
+    &nbsp;&nbsp;ChunkType &nbsp;&nbsp; = "FOLD"<br>
+    &nbsp;&nbsp;ChunkID &nbsp;&nbsp;&nbsp;&nbsp; = "FDA "<br>
+    &nbsp;&nbsp;ChunkVer &nbsp;&nbsp;&nbsp; = 0x01<br>
+    &nbsp;&nbsp;lenChunkName = 0x00<br>
+    &nbsp;&nbsp;ChunkName &nbsp;&nbsp; = ""
+  </code>
+
+  <strong><br><br>
+    INFO chunk
+  </strong><br>
+  Chunk contains info on data contained in DATA chunk.
+  <code><br><br>
+    typedef struct TINFOChunk {<br>
+    &nbsp;&nbsp;ULONG Channels; &nbsp;&nbsp;&nbsp; // Number of channels (1 - mono, 2 - stereo etc.)<br>
+    &nbsp;&nbsp;ULONG SampleSize; &nbsp; // Sample size in bits<br>
+    &nbsp;&nbsp;ULONG BlockBitrate; // Frame size in bits<br>
+    &nbsp;&nbsp;ULONG SampleRate; &nbsp; // Sampling rate in herz<br>
+    &nbsp;&nbsp;ULONG BeginLoop; &nbsp;&nbsp; // Loop beginning (always 0x00)<br>
+    &nbsp;&nbsp;ULONG EndLoop; &nbsp;&nbsp;&nbsp;&nbsp; // Loop ending (always 0xffffffff)<br>
+    &nbsp;&nbsp;ULONG StartOffset;&nbsp; // Loop starting offset (always 0x00)<br>
+    } INFOChunk;<br><br>
+  </code>
+  BlockBitrate defines frame size in bits. Standard values are 256, 512, 1024
+  and 2048. This values correspond to the following bitrates (for one channel):
+  22.05kbps, 44.1kbps - low quality, 88.2kbps - medium quality and 176.4kbps -
+  high quality.<br>
+  BeginLoop, EndLoop and StartOffset contain values for sound playback in that
+  loop. Loop is not used when values specified above are set.<br>
+  Chunk header always contains following values:<br>
+  <code>
+    &nbsp;&nbsp;ChunkType &nbsp;&nbsp; = "DATA"<br>
+    &nbsp;&nbsp;ChunkID &nbsp;&nbsp;&nbsp;&nbsp; = "INFO"<br>
+    &nbsp;&nbsp;ChunkVer &nbsp;&nbsp;&nbsp; = 0x01<br>
+    &nbsp;&nbsp;ChunkSize &nbsp;&nbsp; = 0x1c<br>
+    &nbsp;&nbsp;lenChunkName = 0x00<br>
+    &nbsp;&nbsp;ChunkName &nbsp;&nbsp; = ""
+  </code>
+
+  <strong><br><br>
+    DATA chunk
+  </strong><br>
+  Chunk contains audio data (stream). Audio is compressed with lossy algorithm
+  by Relic's own development. Compressed data is divided into frames. Frame
+  size is always constant and is set by BlockBitrate in INFO chunk.<br>
+  <code><br>
+    typedef struct TDATAChunk {<br>
+    &nbsp;&nbsp;ULONG DataSize; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Compressed data size<br>
+    &nbsp;&nbsp;BYTE SoundData[DataSize]; // Audio data<br>
+    } DATAChunk;<br><br>
+  </code>
+  Chunk header always contains following values:<br>
+  <code>
+    &nbsp;&nbsp;ChunkType &nbsp;&nbsp; = "DATA"<br>
+    &nbsp;&nbsp;ChunkID &nbsp;&nbsp;&nbsp;&nbsp; = "DATA"<br>
+    &nbsp;&nbsp;ChunkVer &nbsp;&nbsp;&nbsp; = 0x01<br>
+    &nbsp;&nbsp;lenChunkName = 0x00<br>
+    &nbsp;&nbsp;ChunkName &nbsp;&nbsp; = ""
+  </code>
+
+
+  <div align="center"><font size=5><strong><br>
+    AIFF-C file format specification<br>
+    (Compressed AIFF)<br>
+  </strong></font></div>
+  Official specification docs can be found
+  <a href="http://www.tsp.ece.mcgill.ca/MMSP/Documents/AudioFormats/AIFF/AIFF.html" target="_blank">here</a>.
+  I will only describe changes Relic made to it.
+
+  <div align="center"><font size=4><strong><br>
+    File structure<br>
+  </strong></font></div>
+  <table width="300" border="1">
+    <tr>
+      <td width="32%">FORM</td>
+      <td width="68%">Container-chunk FORM</td>
+    </tr>
+    <tr>
+      <td><div align="center">FVER</div></td>
+      <td>Format Version chunk</td>
+    </tr>
+    <tr>
+      <td><div align="center">COMM</div></td>
+      <td>Common chunk</td>
+    </tr>
+    <tr>
+      <td><div align="center">SSND</div></td>
+      <td>Sound Data chunk</td>
+    </tr>
+    <tr>
+      <td><div align="center">MARK</div></td>
+      <td>Marker chunk</td>
+    </tr>
+  </table>
+
+  <div align="center"><font size=4><strong><br>
+    Data chunks<br>
+  </strong></font></div>
+
+  <strong>
+    SSND chunk (Sound Data)<br>
+  </strong>
+  Chunk contains audio data.<br>
+  <code><br>
+    typedef struct TSSNDChunk {<br>
+    &nbsp;&nbsp;ULONG Offset; &nbsp;&nbsp;&nbsp;&nbsp; // Data offset (always 0x00)<br>
+    &nbsp;&nbsp;ULONG BlockSize; &nbsp; // Data block size (always 0x00)<br>
+    &nbsp;&nbsp;UINT BlockBitrate; // Frame size in bits<br>
+    } SSNDChunk;<br><br>
+  </code>
+  BlockBitrate only exist in files made by Relics programs. Its purpose is the
+  same as BlockBitrate in INFO chunk in FDA file.
+
+  <strong><br><br>
+    MARK chunk (Marker)<br>
+  </strong>
+  This chunk contains data that define weather or not the sound will be played
+  in loop. Chunk structure is the same as in official AIFF specs. Only MarkerID
+  type is different. Every marker is defined by the following structure:<br>
+  <code><br>
+    typedef struct TAIFCMarker {<br>
+    &nbsp;&nbsp;UINT MarkerID; &nbsp;&nbsp;&nbsp;&nbsp; // Unique marker ID (must be >0)<br>
+    &nbsp;&nbsp;ULONG Position; &nbsp;&nbsp;&nbsp; // Data position, marker points at<br>
+    &nbsp;&nbsp;PSTRING MarkerName; // Marker name<br>
+    } AIFCMarker;<br><br>
+  </code>
+  Relics programs make three markers in a file:<br>
+  Begin Loop Marker:<br>
+  <code>
+    &nbsp;&nbsp;MarkerID &nbsp; = 0x01<br>
+    &nbsp;&nbsp;Position &nbsp; = 0x00<br>
+    &nbsp;&nbsp;MarkerName = "beg loop"\0<br>
+  </code>
+  End Loop Marker:<br>
+  <code>
+    &nbsp;&nbsp;MarkerID &nbsp; = 0x02<br>
+    &nbsp;&nbsp;Position &nbsp; = 0xffffffff<br>
+    &nbsp;&nbsp;MarkerName = "end loop"\0<br>
+  </code>
+  Start Offset Marker:<br>
+  <code>
+    &nbsp;&nbsp;MarkerID &nbsp; = 0x03<br>
+    &nbsp;&nbsp;Position &nbsp; = 0x00<br>
+    &nbsp;&nbsp;MarkerName = "start offset"\0<br>
+  </code>
+  Loop doesn't work when such values are set in Position. Some programs by
+  Relic don't even write MARK chunk in a file when such values are set.
+  Although some do.<br>
+
+  </div>
+  </font>
+</body>
+</html>

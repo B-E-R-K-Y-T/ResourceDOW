@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE races[
+  <!ELEMENT preferences (preferece+)> 
+  <!ELEMENT preference (CDATA|preferenceArr)> 
+  <!ELEMENT preferenceArr (CDATA)>
+  <!ATTLIST preference id ID #REQUIRED>
+  <!ATTLIST preference type CDATA #REQUIRED>
+  <!ATTLIST preferenceArr id ID #REQUIRED>
+]>
+<preferences>
+<preference id="settingBasic" type="System.Boolean">true</preference>
+<preference id="DoWPath" type="System.String">c:\program files\thq\dawn of war\</preference>
+<preference id="PrimaryRed" type="System.Byte">255</preference>
+<preference id="PrimaryGreen" type="System.Byte">0</preference>
+<preference id="PrimaryBlue" type="System.Byte">0</preference>
+<preference id="SecondaryRed" type="System.Byte">0</preference>
+<preference id="SecondaryGreen" type="System.Byte">255</preference>
+<preference id="SecondaryBlue" type="System.Byte">0</preference>
+<preference id="TrimRed" type="System.Byte">0</preference>
+<preference id="TrimGreen" type="System.Byte">0</preference>
+<preference id="TrimBlue" type="System.Byte">255</preference>
+<preference id="WeaponRed" type="System.Byte">255</preference>
+<preference id="WeaponGreen" type="System.Byte">255</preference>
+<preference id="WeaponBlue" type="System.Byte">0</preference>
+<preference id="EyesRed" type="System.Byte">255</preference>
+<preference id="EyesGreen" type="System.Byte">0</preference>
+<preference id="EyesBlue" type="System.Byte">255</preference>
+<preference id="BannerName" type="System.String"></preference>
+<preference id="BadgeName" type="System.String"></preference>
+<preference id="TexturePath" type="System.String">c:\program files\thq\dawn of war\w40k\data\art\ebps\races\</preference>
+<preference id="TeamcolourPath" type="System.String">c:\program files\thq\dawn of war\Profiles\</preference>
+</preferences>
