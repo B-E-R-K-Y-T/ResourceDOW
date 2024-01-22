@@ -80,3 +80,4 @@ DerivedDataCache/*
 
 # Texture files for DOW
 *.dds
+*.rsh
